@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Android_DFM_Example</string>
+    <string name="title_my_dynamic_feature">My Dynamic Feature</string>
+</resources>
