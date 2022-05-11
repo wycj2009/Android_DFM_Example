@@ -25,66 +25,26 @@ class MainActivity : AppCompatActivity() {
     private var sessionId = 0
 
     private val splitInstallStateUpdatedListener = SplitInstallStateUpdatedListener { splitInstallSessionState ->
-        when (splitInstallSessionState.status()) {
-            SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION -> {
-                binding.statusTv.text = """
+        val status = splitInstallSessionState.status()
+
+        binding.statusTv.text = """
                     sessionId = $sessionId
-                    status = REQUIRES_USER_CONFIRMATION
+                    status = $status
                 """.trimIndent()
 
+        when (status) {
+            SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION -> {
                 try {
                     splitInstallManager.startConfirmationDialogForResult(splitInstallSessionState, this, DFM_CONFIRMATION_REQUESTCODE)
                 } catch (e: IntentSender.SendIntentException) {
-                    binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = REQUIRES_USER_CONFIRMATION
-                    $e
-                """.trimIndent()
+                    binding.detailTv.text = e.toString()
                 }
             }
             SplitInstallSessionStatus.DOWNLOADING -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = DOWNLOADING
-                    ${splitInstallSessionState.bytesDownloaded()} of ${splitInstallSessionState.totalBytesToDownload()} bytes downloaded
-                """.trimIndent()
-            }
-            SplitInstallSessionStatus.INSTALLING -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = INSTALLING
-                """.trimIndent()
-            }
-            SplitInstallSessionStatus.DOWNLOADED -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = DOWNLOADED
-                """.trimIndent()
-            }
-            SplitInstallSessionStatus.INSTALLED -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = INSTALLED
-                """.trimIndent()
-            }
-            SplitInstallSessionStatus.CANCELED -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = CANCELED
-                """.trimIndent()
-            }
-            SplitInstallSessionStatus.PENDING -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = PENDING
-                """.trimIndent()
+                binding.detailTv.text = "${splitInstallSessionState.bytesDownloaded()} of ${splitInstallSessionState.totalBytesToDownload()} bytes downloaded"
             }
             SplitInstallSessionStatus.FAILED -> {
-                binding.statusTv.text = """
-                    sessionId = $sessionId
-                    status = FAILED
-                    ${splitInstallSessionState.errorCode()}
-                """.trimIndent()
+                binding.detailTv.text = "${splitInstallSessionState.errorCode()}"
             }
         }
     }
@@ -95,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         splitInstallManager = SplitInstallManagerFactory.create(this)
+        splitInstallManager.registerListener(splitInstallStateUpdatedListener)
 
         binding.launchFeatureBtn.setOnClickListener { launchFeature() }
         binding.startInstallFeatureBtn.setOnClickListener { startInstallFeature() }
@@ -125,8 +86,6 @@ class MainActivity : AppCompatActivity() {
         val splitInstallRequest = SplitInstallRequest.newBuilder()
                 .addModule(DFM_NAME)
                 .build()
-
-        splitInstallManager.registerListener(splitInstallStateUpdatedListener)
 
         splitInstallManager.startInstall(splitInstallRequest)
                 .addOnSuccessListener { sessionId ->
