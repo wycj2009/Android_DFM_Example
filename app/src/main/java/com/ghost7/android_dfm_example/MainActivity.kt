@@ -26,11 +26,27 @@ class MainActivity : AppCompatActivity() {
 
     private val splitInstallStateUpdatedListener = SplitInstallStateUpdatedListener { splitInstallSessionState ->
         val status = splitInstallSessionState.status()
+        val statusName = when (status) {
+            0 -> "UNKNOWN"
+            1 -> "PENDING"
+            2 -> "DOWNLOADING"
+            3 -> "DOWNLOADED"
+            4 -> "INSTALLING"
+            5 -> "INSTALLED"
+            6 -> "FAILED"
+            7 -> "CANCELED"
+            8 -> "REQUIRES_USER_CONFIRMATION"
+            9 -> "CANCELING"
+            else -> ""
+        }
 
-        binding.statusTv.text = """
+        binding.run {
+            statusTv.text = """
                     sessionId = $sessionId
-                    status = $status
+                    status = $statusName
                 """.trimIndent()
+            detailTv.text = ""
+        }
 
         when (status) {
             SplitInstallSessionStatus.REQUIRES_USER_CONFIRMATION -> {
